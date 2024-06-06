@@ -103,6 +103,7 @@ def create_vtar(source_dir, vtarfile):
 
 
 
+
 def create_header(path, rel_path, mode=TAR_TYPE_FILE):
     stat = os.stat(path)
     size = stat.st_size if mode == TAR_TYPE_FILE else 0
