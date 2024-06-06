@@ -26,7 +26,7 @@ brew install gzip
 
 ```
 % gunzip -c B.B00 > B.B00.uncompressed
-% gunzip -c WEASELIN.T00 > WEASELIN.T00.uncompressed
+% gunzip -c WEASELIN.T00 > WEASELIN.T00.vtar
 ```
 
 Проверяем, что мы получили
@@ -35,7 +35,7 @@ brew install gzip
 % file B.B00.uncompressed
 B.B00.uncompressed: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, not stripped
 
-% file WEASELIN.T00.uncompressed
+% file WEASELIN.T00.vtar
 WEASELIN.T00.uncompressed: tar archive
 ```
 
@@ -56,19 +56,18 @@ WEASELIN.T00.uncompressed: tar archive
 
 123
 
-Распаковываем WEASELIN.T00.uncompressed:
-
-```
-% mkdir weaselin_extracted
-% tar -xvf WEASELIN.T00.uncompressed -C weaselin_extracted
-```
-
-123
-
 Так же я написал скрипт на python3 (vtar.py) для работы с vtar архивами.
 
 Распаковка:
 
-python3.11 vtar.py -C test -x WEASELIN.T00.uncompressed
+python3.11 vtar.py -C weaselin_extracted -x WEASELIN.T00.vtar
+
+123
+
+Далее открываем файл "weaselin_extracted/usr/lib/vmware/weasel/util/upgrade_precheck.py".
+
+Ищем строку "family == 0x06 and model" и меняем "0x36" на "0x01".
+
+123
 
 123

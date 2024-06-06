@@ -1,0 +1,5 @@
+vladimir@MacBook-Pro-Vladimir-2 temp % python3.11 vtar.py -C test_extracted -x test.vtar            
+Namespace(vtarfile='test.vtar', directory='test_extracted', extract=True, create=False)
+pos         type offset   txtoff   txtsz    nfix size     name
+0x00000000  0    00000000 00000000 00000000 0000 00000010 .mtoolsrc
+vladimir@MacBook-Pro-Vladimir-2 temp % 
