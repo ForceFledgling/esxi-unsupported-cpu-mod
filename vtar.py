@@ -68,12 +68,126 @@ def main():
         extract_vtar(args.vtarfile, args.directory)
 
 
-def create_vtar(source_dir, vtarfile):
-    with tarfile.open(vtarfile, 'w') as tar:
-        for root, dirs, files in os.walk(source_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                tar.add(file_path, arcname=os.path.relpath(file_path, source_dir))
+
+
+def create_header(path, rel_path, mode=TAR_TYPE_FILE, content_offset=None):
+    stat = os.stat(path)
+    size = stat.st_size if mode == TAR_TYPE_FILE else 0
+    
+    # Set UID, GID, uname, and gname according to the original archive
+    uid = 311
+    gid = 311
+    uname = 'mts'
+    gname = 'mts'
+    
+    # Set access mode according to the original archive
+    mode_value = 0o444 if mode == TAR_TYPE_FILE else 0o755
+    
+    header = vmtar.pack(
+        rel_path.encode('utf-8'),                                  # name
+        '{:07o}\0'.format(mode_value).encode('utf-8'),             # mode
+        '{:07o}\0'.format(uid).encode('utf-8'),                    # uid
+        '{:07o}\0'.format(gid).encode('utf-8'),                    # gid
+        '{:011o}\0'.format(size).encode('utf-8'),                  # size
+        '{:011o}\0'.format(int(stat.st_mtime)).encode('utf-8'),    # mtime
+        b'        ',                                               # chksum placeholder (8 bytes)
+        mode,                                                      # type (already bytes)
+        b'',                                                       # linkname
+        b'visor ',                                                 # magic
+        b' \x00',                                                  # version
+        uname.encode('utf-8').ljust(32, b'\0'),                    # uname
+        gname.encode('utf-8').ljust(32, b'\0'),                    # gname
+        '{:07o}\0'.format(0).encode('utf-8'),                      # devmajor
+        '{:07o}\0'.format(0).encode('utf-8'),                      # devminor
+        b'',                                                       # prefix
+        # 0,                                                       # offset (temporary placeholder)
+        content_offset or 0,                                       # offset (temporary placeholder)
+        0,                                                         # textoffset (temporary placeholder)
+        0,                                                         # textsize (temporary placeholder)
+        0                                                          # numfixuppgs
+    )
+    
+    checksum = sum(header) & 0o777777
+    chksum_str = '{:06o}\0 '.format(checksum).encode('utf-8')
+    header = header[:148] + chksum_str + header[156:]
+
+    return header, size
+
+
+
+
+def create_vtar(directory, vtarfile):
+    page_size = 4096  # размер страницы в vtar
+
+    with open(vtarfile, 'wb') as outfile:
+        entries = []
+
+        # Create entries for all directories and files in the directory
+        for dirpath, _, filenames in os.walk(directory):
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                relpath = os.path.relpath(filepath, directory)
+
+                # Create header for file
+                header, file_size = create_header(filepath, relpath, mode=TAR_TYPE_FILE)
+                entries.append((header, file_size, filepath, relpath))
+
+            for subdir in os.listdir(dirpath):
+                subpath = os.path.join(dirpath, subdir)
+                if os.path.isdir(subpath):
+                    relpath = os.path.relpath(subpath, directory) + '/'
+                    header, _ = create_header(subpath, relpath, mode=TAR_TYPE_DIR)
+                    entries.append((header, 0, subpath, relpath))
+
+        # TODO найти offset контента и добавить в headers !!!!!
+        # Write entries to the output file
+        header_offset_dict = {}
+        for i, header_data in enumerate(entries):
+            header_offset = outfile.tell()
+            print('header_offset / filepath', header_offset, filepath)
+
+            header, file_size, filepath, relpath = header_data
+            header += b'\0' * (512 - len(header))  # Align header to 512-byte boundary
+            outfile.write(header)
+            header_offset_dict[filepath] = header_offset
+        print('header_offset_dict', header_offset_dict)
+
+        # Write files content to the output file
+        for header_data in entries:
+            header, file_size, filepath, relpath = header_data
+
+            if file_size > 0:  # This is a file entry
+                # content_offset = outfile.tell()
+                content_offset = round_up_to_multiple(outfile.tell(), 4096)
+                outfile.seek(content_offset)
+                print('content_offset', content_offset, filepath)
+
+                # Write file content
+                with open(filepath, 'rb') as infile:
+                    infile_read = infile.read()
+                    infile_read += b'\0' * (4096 - len(infile_read))  # Align header to 4096-byte boundary
+                    outfile.write(infile_read)
+                    
+                end_offset = outfile.tell()
+
+                # Update the header with correct offsets
+                header_offset = header_offset_dict[filepath]
+                print('header_offset', header_offset, filepath)
+                outfile.seek(header_offset)  # Seek to offset field in the header
+                header, file_size = create_header(filepath, relpath, mode=TAR_TYPE_FILE, content_offset=content_offset)
+                header += b'\0' * (512 - len(header))  # Align header to 512-byte boundary
+                outfile.write(header)   # Write offset
+                outfile.seek(end_offset)        
+            
+        # Write the end-of-archive marker
+        outfile.write(b'\0' * page_size)
+
+
+
+
+def round_up_to_multiple(number, multiple):
+    return ((number + multiple - 1) // multiple) * multiple
+
 
 
 def extract_vtar(vtarfile, output_dir):
@@ -99,6 +213,7 @@ def extract_vtar(vtarfile, output_dir):
                 raise Exception('Short read at 0x{0:X}'.format(pos))
             
             obj = vmtar.unpack(buf)
+            print('obj', obj)
             
             hdr_magic       = obj[9]
             if hdr_magic != b'visor ':

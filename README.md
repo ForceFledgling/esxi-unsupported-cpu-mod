@@ -25,17 +25,17 @@ brew install gzip
 Распаковка архивов:
 
 ```
-% gunzip -c B.B00 > B.B00.uncompressed
-% gunzip -c WEASELIN.T00 > WEASELIN.T00.vtar
+% gunzip -c B.B00 > vmkBoot.ELF32-psigned
+% gunzip -c WEASELIN.T00 > weaselin-weasel.vtar
 ```
 
 Проверяем, что мы получили
 
 ```
-% file B.B00.uncompressed
+% file vmkBoot.ELF32-psigned
 B.B00.uncompressed: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, not stripped
 
-% file WEASELIN.T00.vtar
+% file weaselin-weasel.vtar
 WEASELIN.T00.uncompressed: tar archive
 ```
 
@@ -46,8 +46,16 @@ WEASELIN.T00.uncompressed: tar archive
 После редактирования собираем файл обратно
 
 ```
-% gzip B.B00.uncompressed
-% mv B.B00.uncompressed.gz B.B00
+% mv B.B00 B.B00.backup
+% gzip vmkBoot.ELF32-psigned
+% mv vmkBoot.ELF32-psigned.gz B.B00
+```
+
+Проверяем, что мы получили тоже самое
+
+```
+% file B.B00
+B.B00: gzip compressed data, was "vmkBoot.ELF32-psigned", last modified: Fri Jun  7 08:24:34 2024, from Unix, original size modulo 2^32 2110092
 ```
 
 ## Модифицируем WEASELIN.T00
@@ -60,14 +68,30 @@ WEASELIN.T00.uncompressed: tar archive
 
 Распаковка:
 
-python3.11 vtar.py -C weaselin_extracted -x WEASELIN.T00.vtar
-
-123
+```
+python3.11 vtar.py -C weaselin_extracted -x weaselin-weasel.vtar
+```
 
 Далее открываем файл "weaselin_extracted/usr/lib/vmware/weasel/util/upgrade_precheck.py".
 
-Ищем строку "family == 0x06 and model" и меняем "0x36" на "0x01".
+Ищем строку "`family == 0x06 and model`" и меняем "`0x36`" на "`0x01`".
 
-123
+Запаковка:
 
-123
+```
+% mv WEASELIN.T00 WEASELIN.T00.backup
+% mv weaselin-weasel.vtar weaselin-weasel.vtar.backup
+
+% python3.11 vtar.py -c -C weaselin_extracted weaselin-weasel.vtar
+% gzip weaselin-weasel.vtar
+% mv weaselin-weasel.vtar.gz WEASELIN.T00
+```
+
+Проверяем, что получили тоже самое:
+
+```
+% file WEASELIN.T00
+WEASELIN.T00: gzip compressed data, was "weaselin-weasel.vtar", last modified: Fri Jun  7 08:28:15 2024, from Unix, original size modulo 2^32 2506752
+```
+
+ДОПОЛНИТЬ
