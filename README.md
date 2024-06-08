@@ -136,3 +136,9 @@ WEASELIN.T00: gzip compressed data, was "weaselin-weasel.vtar", last modified: F
 123
 
 123
+
+# Добавление драйвера в образ ESXi
+
+123
+
+123
