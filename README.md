@@ -85,7 +85,17 @@ python3.11 vtar.py -C weaselin_extracted -x weaselin-weasel.vtar
 
 Далее открываем файл "weaselin_extracted/usr/lib/vmware/weasel/util/upgrade_precheck.py".
 
-Ищем строку "`family == 0x06 and model`" и меняем "`0x36`" на "`0x01`".
+### Для Intel
+
+Ищем все вхождения "`GenuineIntel`"
+
+ищем строку "`elif family == 0x0f or (family == 0x06 and model <= 0x36 and model != 0x2d):`" и меняем "`0x36`" на "`0x01`".
+
+### Для AMD
+
+Ищем все вхождения "`AuthenticAMD`"
+
+ищем строку "`elif vendor == "AuthenticAMD" and family < 0x15:`" и меняем
 
 Запаковка:
 
