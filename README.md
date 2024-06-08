@@ -1,4 +1,4 @@
-# Модификация ESXi
+# Allowing Unsupported CPU’s on ESXi 6
 
 ## Important Notes:
 
@@ -120,3 +120,19 @@ WEASELIN.T00: gzip compressed data, was "weaselin-weasel.vtar", last modified: F
 ```
 
 ДОПОЛНИТЬ
+
+123
+
+# Allowing Unsupported PCI deveices on ESXi 7
+
+В ESXi 7-й версии добавлена поддержка allowLegacyCPU=true для Weasel, поэтому в модификации нет нужды.
+
+Но так же увеличен списк неподдерживаемых PCI устрйоств.
+
+## Разрешение неподдерживаемой сетевой карты
+
+ДОПОЛНИТЬ
+
+123
+
+123
