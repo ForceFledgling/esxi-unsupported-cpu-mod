@@ -1,5 +1,16 @@
 # Модификация ESXi
 
+## Important Notes:
+
+- This doesn’t guarantee CPU’s to run with ESXi, only that they will pass the checks, and can install and start to load.
+- This does not apply to other devices that also may be Unsupported.
+- Everything done from here on out will involve modifying the ESXI binaries.
+- Anything you see from here on is Unsupported and not fit for commercial purposes. Use at your own risk.
+
+## Further Considerations:
+
+This workaround will need to be applied every upgrade/patch. Make sure that if you are going to keep the modified files make sure that it is only used for the build you originally modified. If you download a new ISO or Patch your system, go through the steps again with a fresh file related to the new build.
+
 ## Подготовка
 
 Копируем файлы B.B00 и WEASELIN.T00 в отдельную директорию.
