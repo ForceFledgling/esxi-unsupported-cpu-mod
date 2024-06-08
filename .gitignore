@@ -163,3 +163,5 @@ cython_debug/
 
 # VSCode
 .DS_Store
+src
+temp

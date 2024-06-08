@@ -75,6 +75,10 @@ B.B00: gzip compressed data, was "vmkBoot.ELF32-psigned", last modified: Fri Jun
 
 123
 
+Разблокировка NIC
+
+lspci -v | grep -A1 -i ethernet
+
 Так же я написал скрипт на python3 (vtar.py) для работы с vtar архивами.
 
 Распаковка:
